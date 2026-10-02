@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Qual o nível de processamento dos alimentos?</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800;900&display=swap');
+
+  :root{
+    --bg: #FFF7E8;
+    --wood: #C9A66B;
+    --wood-dark: #9C7A46;
+    --ink: #3A2E22;
+    --verde: #4E9A4E;
+    --verde-d: #386F38;
+    --azul: #3E85BE;
+    --azul-d: #2C6390;
+    --amarelo: #E5A02E;
+    --amarelo-d: #B67B1B;
+    --vermelho: #D8524A;
+    --vermelho-d: #A93A33;
+    --card: #FFFFFF;
+    --ok: #4E9A4E;
+    --erro: #D8524A;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--bg);
+    background-image:
+      radial-gradient(circle at 10% 10%, rgba(201,166,107,0.15) 0, transparent 40%),
+      radial-gradient(circle at 90% 90%, rgba(78,154,78,0.12) 0, transparent 40%);
+    font-family: 'Nunito', sans-serif;
+    color: var(--ink);
+    min-height: 100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 16px;
+  }
+
+  #app{
+    width: 100%;
+    max-width: 760px;
+    min-height: 660px;
+    background: var(--card);
+    border-radius: 28px;
+    box-shadow: 0 20px 50px rgba(58,46,34,0.18);
+    padding: 28px 24px 32px;
+    position: relative;
+    overflow: hidden;
+    border: 6px solid var(--wood);
+  }
+
+  h1,h2,h3{ font-family:'Baloo 2', sans-serif; margin:0; }
+
+  .screen{ display:none; animation: fadeIn .4s ease; }
+  .screen.active{ display:flex; flex-direction:column; align-items:center; gap:18px; }
+
+  @keyframes fadeIn{ from{opacity:0; transform: translateY(8px);} to{opacity:1; transform:none;} }
+
+  /* ---------- BOTÕES GRANDES ---------- */
+  .big-btn{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size: 1.4rem;
+    border:none;
+    border-radius: 20px;
+    padding: 18px 26px;
+    cursor:pointer;
+    color:#fff;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.18);
+    transition: transform .08s ease, box-shadow .08s ease;
+    min-height: 64px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+  }
+  .big-btn:active{ transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.18); }
+  .btn-primary{ background: var(--verde); }
+  .btn-secondary{ background: var(--azul); }
+  .btn-ghost{
+    background: #fff;
+    color: var(--ink);
+    border: 3px solid var(--wood);
+    box-shadow:none;
+    font-size:1.2rem;
+    padding:14px 22px;
+    min-height: 56px;
+  }
+  .btn-ingredients{
+    background: #7E57C2;
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    padding: 10px 20px;
+    font-size: 1.05rem;
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #5E35B1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform .08s ease;
+  }
+  .btn-ingredients:active{ transform: translateY(3px); box-shadow: none; }
+
+  /* ---------- WELCOME ---------- */
+  #welcome h1{ font-size: 1.8rem; line-height: 1.25; text-align:center; color: var(--ink); max-width: 540px; margin-top: 10px; }
+  #welcome p{ font-size: 1.25rem; text-align:center; max-width: 560px; margin:0; line-height: 1.4; }
+
+  /* ---------- DISCLAIMER ---------- */
+  .disclaimer-box{
+    font-size: 0.82rem;
+    color: #7A6A56;
+    background: rgba(201, 166, 107, 0.15);
+    border: 1px dashed rgba(201, 166, 107, 0.6);
+    border-radius: 14px;
+    padding: 10px 14px;
+    text-align: center;
+    line-height: 1.4;
+    margin-top: 8px;
+    max-width: 580px;
+  }
+
+  /* ---------- PROGRESS ---------- */
+  #progress-wrap{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+  }
+  #progress-label{ font-family:'Baloo 2'; font-size:1.15rem; color:var(--wood-dark); font-weight:700; }
+  #progress-bar-bg{
+    width:100%;
+    height:16px;
+    background:#EFE4CE;
+    border-radius: 10px;
+    overflow:hidden;
+    border: 2px solid var(--wood);
+  }
+  #progress-bar-fill{
+    height:100%;
+    width:0%;
+    background: linear-gradient(90deg, var(--verde), var(--amarelo));
+    border-radius:10px;
+    transition: width .35s ease;
+  }
+
+  /* ---------- CARD DO ALIMENTO ---------- */
+  #item-card{
+    background: #FFFDF8;
+    border: 4px dashed var(--wood);
+    border-radius: 24px;
+    width: 100%;
+    max-width: 380px;
+    padding: 18px 14px 16px;
+    text-align:center;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap: 12px;
+    position: relative;
+  }
+  #item-photo-wrapper{
+    width: 220px;
+    height: 220px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    border-radius: 20px;
+    border: 4px solid var(--wood);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.14);
+    overflow: hidden;
+  }
+  #item-photo{
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 4px;
+    transition: transform .2s ease;
+  }
+  #item-photo.pop{ animation: pop .35s ease; }
+
+  @keyframes pop{ 0%{transform:scale(1);} 40%{transform:scale(1.08);} 100%{transform:scale(1);} }
+
+  #item-name{ font-family:'Baloo 2'; font-size: 1.8rem; font-weight:800; color: var(--ink); line-height: 1.2; }
+
+  .card-action-btns{
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  #hear-btn{
+    background: var(--wood);
+    color:#fff;
+    border:none;
+    border-radius: 50px;
+    padding: 10px 18px;
+    font-size: 1.05rem;
+    font-family:'Baloo 2';
+    font-weight: 700;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    box-shadow: 0 4px 0 var(--wood-dark);
+  }
+  #hear-btn:active{ transform: translateY(3px); box-shadow:none; }
+
+  /* ---------- CAIXOTES / GRUPOS ---------- */
+  #crates{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    width:100%;
+  }
+  .crate{
+    border:none;
+    border-radius: 20px;
+    padding: 16px 8px;
+    min-height: 110px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:4px;
+    cursor:pointer;
+    color:#fff;
+    text-align:center;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.2);
+    transition: transform .08s ease, box-shadow .08s ease, filter .15s ease;
+  }
+  .crate:active{ transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.2); }
+  .crate .c-label{ font-family:'Baloo 2'; font-weight:700; font-size: 1.2rem; }
+  .crate .c-label.small-label{ font-size: 0.9rem; line-height: 1.2; }
+  .crate .c-sub{ font-size: 0.88rem; font-weight:600; opacity:.92; }
+
+  .crate.g0{ background: linear-gradient(160deg, var(--verde), var(--verde-d)); }
+  .crate.g1{ background: linear-gradient(160deg, var(--azul), var(--azul-d)); }
+  .crate.g2{ background: linear-gradient(160deg, var(--amarelo), var(--amarelo-d)); }
+  .crate.g3{ background: linear-gradient(160deg, var(--vermelho), var(--vermelho-d)); }
+
+  .crate.correct-flash{ outline: 6px solid #2E7D32; filter: brightness(1.1); }
+  .crate.wrong-flash{ animation: shake .4s ease; outline: 6px solid #7A241F; }
+  @keyframes shake{
+    0%,100%{ transform: translateX(0); }
+    20%{ transform: translateX(-6px); }
+    40%{ transform: translateX(6px); }
+    60%{ transform: translateX(-4px); }
+    80%{ transform: translateX(4px); }
+  }
+  .crate.disabled{ opacity:.55; pointer-events:none; }
+
+  /* ---------- FEEDBACK ---------- */
+  #feedback{
+    width:100%;
+    max-width: 540px;
+    text-align:center;
+    border-radius: 18px;
+    padding: 14px 16px;
+    font-family:'Baloo 2';
+    font-size: 1.2rem;
+    font-weight:700;
+    display:none;
+    line-height: 1.3;
+  }
+  #feedback.show{ display:block; animation: fadeIn .3s ease; }
+  #feedback.ok{ background:#E4F3E4; color: var(--verde-d); border:3px solid var(--verde); }
+  #feedback.bad{ background:#FBE7E5; color: var(--vermelho-d); border:3px solid var(--vermelho); }
+
+  /* ---------- MODAL DE INGREDIENTES ---------- */
+  .modal-overlay{
+    position: absolute;
+    top:0; left:0; width:100%; height:100%;
+    background: rgba(40, 30, 20, 0.7);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+    animation: fadeIn .25s ease;
+  }
+  .modal-overlay.active{ display: flex; }
+  .modal-card{
+    background: #FFFDF8;
+    border: 5px solid var(--wood);
+    border-radius: 24px;
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 24px 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .modal-header{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px dashed var(--wood);
+    padding-bottom: 12px;
+  }
+  .modal-header h3{
+    font-family: 'Baloo 2';
+    font-size: 1.5rem;
+    color: var(--ink);
+  }
+  .modal-close-btn{
+    background: #EFE4CE;
+    border: none;
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    font-size: 1.3rem;
+    font-weight: bold;
+    cursor: pointer;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-close-btn:hover{ background: var(--wood); color: #fff; }
+
+  .modal-body{
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .ingredients-box{
+    background: #FFF;
+    border: 2px solid #E2D5C1;
+    border-radius: 16px;
+    padding: 16px;
+    font-size: 1.05rem;
+    line-height: 1.5;
+    color: #4A3E31;
+  }
+  .ingredients-box strong{
+    color: var(--wood-dark);
+  }
+
+  .additives-tag-box{
+    background: #FDF2F0;
+    border: 2px dashed var(--vermelho);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .additives-tag-box .title{
+    font-family: 'Baloo 2';
+    font-weight: 700;
+    color: var(--vermelho-d);
+    font-size: 1.05rem;
+  }
+  .additive-badge{
+    display: inline-block;
+    background: #F7D4D0;
+    color: #8C241D;
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin: 2px 4px 2px 0;
+  }
+
+  .modal-actions{
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  /* ---------- FIM DE JOGO ---------- */
+  #end h2{ font-size: 2.2rem; text-align:center; margin-top:15px; }
+  #score-text{ font-family:'Baloo 2'; font-size: 2.6rem; color: var(--wood-dark); font-weight:800; }
+  #end p{ font-size:1.25rem; text-align:center; max-width: 480px; }
+
+  footer.hint{
+    font-size: .85rem;
+    color: #9c8a6f;
+    text-align:center;
+    margin-top: 6px;
+  }
+
+  @media (min-width: 560px){
+    #crates{ grid-template-columns: repeat(4,1fr); }
+    .crate{ min-height: 150px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- TELA 1: BOAS-VINDAS -->
+  <section id="welcome" class="screen active">
+    <h1>Qual o nível de processamento dos alimentos?</h1>
+    <p>Observe a foto de cada produto, confira os rótulos e separe os alimentos nos 4 grupos da guia NOVA: <strong>In natura</strong>, <strong>Ingrediente culinário</strong>, <strong>Processado</strong> e <strong>Ultraprocessado</strong>.</p>
+    <button class="big-btn btn-secondary" id="btn-hear-instructions">🔊 Ouvir explicação</button>
+    <button class="big-btn btn-primary" id="btn-start">▶️ Começar o jogo</button>
+    
+    <div class="disclaimer-box">
+      ℹ️ <strong>Isenção de Responsabilidade (Uso Educativo):</strong> As marcas, logotipos e embalagens eventualmente exibidos neste jogo são utilizados <strong>exclusivamente para fins pedagógicos e educativos</strong> (análise de rótulos e classificação dos alimentos). As marcas não patrocinam, apoiam nem possuem qualquer vínculo ou conflito de interesse com este jogo.
+    </div>
+
+    <footer class="hint">Toque no caixote da cor certa para cada alimento</footer>
+  </section>
+
+  <!-- TELA 2: JOGO -->
+  <section id="game" class="screen">
+    <div id="progress-wrap">
+      <div id="progress-label">Alimento 1 de 26</div>
+      <div id="progress-bar-bg"><div id="progress-bar-fill"></div></div>
+    </div>
+
+    <div id="item-card">
+      <div id="item-photo-wrapper">
+        <img id="item-photo" alt="" src="">
+      </div>
+      <div id="item-name">Maçã</div>
+      
+      <div class="card-action-btns">
+        <button id="hear-btn">🔊 Ouvir nome</button>
+        <button class="btn-ingredients" id="btn-open-ingredients">📋 Ver Ingredientes</button>
+      </div>
+    </div>
+
+    <div id="feedback"></div>
+
+    <div id="crates">
+      <button class="crate g0" data-group="0">
+        <span class="c-label small-label">IN NATURA OU<br>MINIMAMENTE<br>PROCESSADOS</span>
+      </button>
+      <button class="crate g1" data-group="1">
+        <span class="c-label">INGREDIENTE<br>CULINÁRIO</span>
+        <span class="c-sub">Para cozinhar</span>
+      </button>
+      <button class="crate g2" data-group="2">
+        <span class="c-label">PROCESSADO</span>
+        <span class="c-sub">Poucas mudanças</span>
+      </button>
+      <button class="crate g3" data-group="3">
+        <span class="c-label">ULTRA-<br>PROCESSADO</span>
+        <span class="c-sub">Feito em fábrica</span>
+      </button>
+    </div>
+
+    <button class="big-btn btn-ghost" id="btn-next" style="display:none;">Próximo ➡️</button>
+  </section>
+
+  <!-- MODAL DE INGREDIENTES -->
+  <div class="modal-overlay" id="modal-ingredients-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-item-title">📋 Lista de Ingredientes</h3>
+        <button class="modal-close-btn" id="modal-close-btn">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="ingredients-box">
+          <strong>Ingredientes do Rótulo:</strong>
+          <p id="modal-ingredients-text" style="margin: 8px 0 0;"></p>
+        </div>
+        <div class="additives-tag-box" id="modal-additives-box" style="display:none;">
+          <div class="title">⚠️ Aditivos Industriais Encontrados:</div>
+          <div id="modal-additives-list"></div>
+        </div>
+        <div style="font-size: 0.95rem; color: #665643; background: #F8F1E5; padding: 10px 14px; border-radius: 12px;">
+          💡 <strong>Dica Pedagógica:</strong> <span id="modal-pedagogical-tip"></span>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="big-btn btn-secondary" id="btn-speak-ingredients" style="font-size: 1.1rem; padding: 10px 18px; min-height: 48px;">🔊 Ouvir Lista</button>
+        <button class="big-btn btn-primary" id="modal-confirm-btn" style="font-size: 1.1rem; padding: 10px 22px; min-height: 48px;">Entendi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TELA 3: FIM -->
+  <section id="end" class="screen">
+    <h2 id="end-msg">Muito bem!</h2>
+    <div id="score-text">0 de 26</div>
+    <p id="end-detail">Você acertou bastante! Continue praticando.</p>
+    <button class="big-btn btn-secondary" id="btn-hear-result">🔊 Ouvir resultado</button>
+    <button class="big-btn btn-primary" id="btn-restart">🔄 Jogar de novo</button>
+
+    <div class="disclaimer-box">
+      ℹ️ <strong>Nota de Uso Educativo:</strong> Este jogo tem caráter estritamente acadêmico e de conscientização nutricional. As imagens de produtos são utilizadas sem qualquer patrocínio ou conflito de interesse.
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  // ---------------- DADOS DO JOGO ----------------
+  const GROUPS = [
+    { name:"In natura ou minimamente processados", desc:"é um alimento IN NATURA OU MINIMAMENTE PROCESSADO, direto da natureza ou com alterações simples sem adição de sal ou açúcar" },
+    { name:"Ingrediente culinário", desc:"é um INGREDIENTE CULINÁRIO, usado para temperar e cozinhar alimentos" },
+    { name:"Processado", desc:"é um alimento PROCESSADO, feito adicionando sal, açúcar ou óleo a um alimento in natura" },
+    { name:"Ultraprocessado", desc:"é um alimento ULTRAPROCESSADO, formulado pela indústria com aditivos, corantes, aromatizantes e conservantes" }
+  ];
+
+  const ITEMS = [
+    // --- GRUPO 0: IN NATURA OU MINIMAMENTE PROCESSADOS ---
+    {
+      name: "Maçã Fresca", group: 0,
+      photo: "https://gardenoficinadaterra.com.br/wp-content/uploads/2021/04/maca-fuji.jpg",
+      ingredients: "Maçã 100% fresca.",
+      additives: [],
+      tip: "Alimentos in natura não possuem ingredientes adicionados; vêm diretamente de plantas ou animais."
+    },
+    {
+      name: "Cenoura", group: 0,
+      photo: "https://www.infoescola.com/wp-content/uploads/2010/08/cenoura_250834906.jpg",
+      ingredients: "Cenoura 100% fresca.",
+      additives: [],
+      tip: "Legumes in natura não passam por nenhuma transformação química."
+    },
+    {
+      name: "Ovo de Galinha", group: 0,
+      photo: "https://s2-g1.glbimg.com/pCKpAv6g5YOJzl8kdgnsjEIgQYg=/0x0:1048x582/984x0/smart/filters:strip_icc()/i.s3.glbimg.com/v1/AUTH_59edd422c0c84a879bd37670ae4f538a/internal_photos/bs/2018/m/N/QKAIerRXOstBVm1oBGAQ/ovo3.jpg",
+      ingredients: "Ovo de galinha.",
+      additives: [],
+      tip: "Alimento in natura completo de origem animal."
+    },
+    {
+      name: "Feijão Preto (Pacote)", group: 0,
+      photo: "https://img.fazendinha.me/production/produtor/462/produtos/3825/ceccon-organicos-feijao-preto-organico-ceccon-1kg-1646429551.jpg",
+      ingredients: "Feijão preto em grãos secos.",
+      additives: [],
+      tip: "Minimamemte processado: passou apenas por limpeza, secagem e embalagem para chegar até você."
+    },
+    {
+      name: "Leite Integral (Embalagem)", group: 0,
+      photo: "https://www.piracanjuba.com.br/assets/images/produtos/leite-em-po-integral-1kg.png",
+      ingredients: "Leite fluido integral pasteurizado.",
+      additives: [],
+      tip: "A pasteurização apenas mata bactérias nocivas, mantendo o alimento minimamente processado."
+    },
+    {
+      name: "Farinha de Trigo", group: 0,
+      photo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRtayZyY4_KVVgV6TNgfKv9BZpEUonsf2njm9LNR5HmJA&s=10",
+      ingredients: "Farinha de trigo enriquecida com ferro e ácido fólico.",
+      additives: [],
+      tip: "Moer grãos de trigo para fazer farinha é um exemplo clássico de processamento mínimo."
+    },
+    {
+      name: "Arroz Branco", group: 0,
+      photo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBeoX8wG_0giTsalDWaj45uboO1TVbITgKKzZppPyaOg&s=10",
+      ingredients: "Arroz polido tipo 1.",
+      additives: [],
+      tip: "Descascar e polir o grão é um processo físico simples sem adição de substâncias sintéticas."
+    },
+
+    // --- GRUPO 1: INGREDIENTES CULINÁRIOS PROCESSADOS ---
+    {
+      name: "Sal Refinado", group: 1,
+      photo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ3ssOn7rEZxk7y-RPanEYpg8zPPWvPMGTWcH9pK8RN2A&s=10",
+      ingredients: "Cloreto de sódio, iodato de potássio, antiumectante ferrodocianeto de sódio.",
+      additives: [],
+      tip: "Extraído da natureza ou salinas, usado para temperar e preparar receitas culinárias."
+    },
+    {
+      name: "Manteiga", group: 1,
+      photo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRRh1X5imn6Yaq9Jxuh44ZXE2zAXXJ-nv60KZzmf_JCDw&s=10",
+      ingredients: "Creme de leite pasteurizado e sal.",
+      additives: [],
+      tip: "Ingrediente culinário obtido ao bater a nata do leite fresco."
+    },
+    {
+      name: "Óleo de Soja", group: 1,
+      photo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-BV_j7OuW4hjY2EMKUOzo-OtSUeTrt9VgTQW2ykw9dA&s=10",
+      ingredients: "Óleo de soja refinado.",
+      additives: [],
+      tip: "Pressionado e extraído de sementes de soja para uso no refogado e cozimento."
+    },
+    {
+      name: "Mel de Abelha", group: 1,
+      photo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTk4_NSbbfF_vuLWOEiwkPgJT5auLzxPWrJtXKMVuDjWQ&s=10",
+      ingredients: "100% Mel puro de abelha.",
+      additives: [],
+      tip: "Substância natural usada na cozinha para adoçar alimentos."
+    },
+    {
+      name: "Vinagre de Maçã", group: 1,
+      photo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ0vR45Pd2XKRRi38_cxIu7EXZpRajOX4zVkaPFQSJCTzwMxWwHumzW2sE&s=10",
+      ingredients: "Fermentado acético de maçã e água.",
+      additives: [],
+      tip: "Obtido por fermentação natural do suco de maçã."
+    },
+
+    // --- GRUPO 2: ALIMENTOS PROCESSADOS ---
+    {
+      name: "Queijo Muçarela", group: 2,
+      photo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTIzluEg64gBYBqKWKD3aUqP98OGv1Sts-KT1-8bT_cog&s=10",
+      ingredients: "Leite pasteurizado, sal, fermento lácteo e coalho.",
+      additives: [],
+      tip: "Alimento processado: combina leite (in natura) com sal e coalho (ingredientes culinários)."
+    },
+    {
+      name: "Pão de Padaria (Francês)", group: 2,
+      photo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTTSX4Diewc9qDhUzq4RQhYla70GfPpIJdgDb_yZF-Y_w&s=10",
+      ingredients: "Farinha de trigo, água, sal e fermento biológico.",
+      additives: [],
+      tip: "Feito de forma artesanal com ingredientes simples da cozinha."
+    },
+    {
+      name: "Milho em Conserva", group: 2,
+      photo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcStNxTEBbrbKb5nZTEHlt4mxPB3oTjUcruNU7XTVf6BdA&s=10",
+      ingredients: "Milho verde em grãos, água e sal.",
+      additives: [],
+      tip: "Milho in natura cozido e preservado em água e sal para durar mais."
+    },
+    {
+      name: "Sardinha em Lata", group: 2,
+      photo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQD6ytOWtxiXhqeOUHRDsGzO6Y0DQwWO9F0tlgRsiHV7w&s=10",
+      ingredients: "Sardinha, óleo vegetal e sal.",
+      additives: [],
+      tip: "Peixe em conserva adicionado apenas de óleo vegetal e sal."
+    },
+    {
+      name: "Picles em Conserva", group: 2,
+      photo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTd8cAiM1-jGERJ3UfI1ls8Ocv34PQTBtMIYEgrpMLtDg&s=10",
+      ingredients: "Pepino, água, vinagre, sal e açúcar.",
+      additives: [],
+      tip: "Pepinos imersos em vinagre e salmoura para preservação."
+    },
+    {
+      name: "Extrato de Tomate", group: 2,
+      photo: "https://i0.wp.com/anamariabraga.globo.com/wp-content/uploads/2020/06/como-fazer-molho-com-extrato-de-tomate.jpg?fit=1200%2C675&ssl=1",
+      ingredients: "Tomate concentrado e sal.",
+      additives: [],
+      tip: "Tomates cozidos e concentrados com apenas sal adicionado."
+    },
+
+    // --- GRUPO 3: ALIMENTOS ULTRAPROCESSADOS ---
+    {
+      name: "Refrigerante de Cola", group: 3,
+      photo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQD5A-CD1L7ql5-9Z2wJqcXUNRHjvvNy5G5uswt9e8_WA&s=10",
+      ingredients: "Água gaseificada, açúcar, extrato de noz de cola, corante caramelo IV, acidulante ácido fosfórico, aroma natural e cafeína.",
+      additives: ["Corante Caramelo IV", "Acidulante Ácido Fosfórico", "Aroma Sintético"],
+      tip: "Contém corantes sintéticos, acidulantes e alta concentração de açúcar industrial."
+    },
+    {
+      name: "Salgadinho de Pacote", group: 3,
+      photo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQjp7EO41G1bj-uE2FS66APu_wKrxag2lqynYFu3R2O_A&s=10",
+      ingredients: "Farinha de milho, óleo vegetal, aroma de queijo (soro de leite, sal, maltodextrina, realçador de sabor glutamato monossódico, antiumectante dióxido de silício), corante urucum.",
+      additives: ["Glutamato Monossódico (Realçador de Sabor)", "Maltodextrina", "Dióxido de Silício"],
+      tip: "Combina gorduras modificadas e realçadores químicos de sabor para hiperpalatabilidade."
+    },
+    {
+      name: "Macarrão Instantâneo", group: 3,
+      photo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQeKHi__pMTm-Y2EF9QdDpcf4pavZyXDRYWXvQ9ZFIBw&s=10",
+      ingredients: "Farinha de trigo, gordura vegetal, sal, carbonato de potássio. Tempero: sal, maltodextrina, carne de galinha desidratada, realçadores de sabor glutamato monossódico e inosinato dissódico, aromatizantes, corante caramelo III.",
+      additives: ["Glutamato Monossódico", "Inosinato Dissódico", "Corante Caramelo III", "Gordura Vegetal Hidrogenada"],
+      tip: "A massa é pré-frita em gordura e o tempero contém aditivos químicos e excesso de sódio."
+    },
+    {
+      name: "Biscoito Recheado", group: 3,
+      photo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTG0RfO16TRRaq00478Wsj12BzTgzrFbqMxEaTJJkycbQ&s=10",
+      ingredients: "Farinha de trigo, açúcar, gordura vegetal interesterificada, cacau em pó, soro de leite, sal, fermentos bicarbonato de amônio e sódio, emulsificante lecitina de soja, aromatizantes.",
+      additives: ["Gordura Interesterificada", "Emulsificante Lecitina de Soja", "Aromatizantes Sintéticos"],
+      tip: "Rico em gordura vegetal modificada, açúcar e emulsificantes industriais."
+    },
+    {
+      name: "Salsicha", group: 3,
+      photo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQy_lReeRt-3tS3H-_R0fa3KoijAprT70eeGdfXzYDnbA&s=10",
+      ingredients: "Carne mecanicamente separada de ave, gordura suína, água, proteína de soja, sal, amido, tripolifosfato de sódio, realçador de sabor glutamato monossódico, conservadores nitrito e nitrato de sódio, corante carmim de cochonilha.",
+      additives: ["Carne Mecanicamente Separada", "Tripolifosfato de Sódio", "Nitrito e Nitrato de Sódio", "Corante Carmim"],
+      tip: "Massa emulsionada com retalhos de carne, conservantes químicos (nitritos) e corantes."
+    },
+    {
+      name: "Pão de Forma Industrial", group: 3,
+      photo: "https://www.sindustrigo.com.br/assets/upload/noticias/20776730221564149845paoindustrial.jpg",
+      ingredients: "Farinha de trigo, água, açúcar, óleo de soja, sal, conservador propionato de cálcio, emulsificantes mono e diglicerídeos de ácidos graxos, melhorador de farinha ácido ascórbico.",
+      additives: ["Propionato de Cálcio (Conservador)", "Emulsificantes Mono e Diglicerídeos", "Melhorador de Farinha"],
+      tip: "Diferente do pão de padaria, contém conservantes e emulsificantes para durar semanas embalado."
+    },
+    {
+      name: "Cereal Matinal Açucarado", group: 3,
+      photo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQrbpyriB9SYwR47VTnWM6IY1QIEte1TofFc6rhYXHsQw&s=10",
+      ingredients: "Milho, açúcar, extrato de malte, sal, vitaminas, minerais, aromatizante sintético idêntico ao natural de baunilha, antioxidante misto de tocoferóis.",
+      additives: ["Aromatizante Sintético", "Extrato de Malte", "Açúcar em Excesso"],
+      tip: "Grãos submetidos à extrusão industrial com adição massiva de açúcar e fragrâncias."
+    },
+    {
+      name: "Achocolatado em Pó", group: 3,
+      photo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRntyPBu9LSHeMUlygcMGbc75gO3zMIQayz9uelcM6gRw&s",
+      ingredients: "Açúcar, cacau em pó, maltodextrina, minerais, vitaminas, emulsificante lecitina de soja e aromatizantes.",
+      additives: ["Maltodextrina", "Emulsificante Lecitina de Soja", "Aromatizante Artificial"],
+      tip: "Aproximadamente 70% a 80% do produto é puro açúcar acrescido de aromatizantes."
+    }
+  ];
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]]=[a[j],a[i]];
+    }
+    return a;
+  }
+
+  // ---------------- ESTADO ----------------
+  let order = [];
+  let idx = 0;
+  let score = 0;
+  let answered = false;
+
+  // ---------------- ELEMENTOS ----------------
+  const screens = {
+    welcome: document.getElementById('welcome'),
+    game: document.getElementById('game'),
+    end: document.getElementById('end'),
+  };
+  const progressLabel = document.getElementById('progress-label');
+  const progressFill = document.getElementById('progress-bar-fill');
+  const itemPhoto = document.getElementById('item-photo');
+  const itemName = document.getElementById('item-name');
+  const feedback = document.getElementById('feedback');
+  const crates = Array.from(document.querySelectorAll('.crate'));
+  const btnNext = document.getElementById('btn-next');
+  const btnHear = document.getElementById('hear-btn');
+
+  // Modal Ingredientes
+  const btnOpenIngredients = document.getElementById('btn-open-ingredients');
+  const modalOverlay = document.getElementById('modal-ingredients-overlay');
+  const modalCloseBtn = document.getElementById('modal-close-btn');
+  const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+  const modalItemTitle = document.getElementById('modal-item-title');
+  const modalIngredientsText = document.getElementById('modal-ingredients-text');
+  const modalAdditivesBox = document.getElementById('modal-additives-box');
+  const modalAdditivesList = document.getElementById('modal-additives-list');
+  const modalPedagogicalTip = document.getElementById('modal-pedagogical-tip');
+  const btnSpeakIngredients = document.getElementById('btn-speak-ingredients');
+
+  function showScreen(name){
+    Object.values(screens).forEach(s=>s.classList.remove('active'));
+    screens[name].classList.add('active');
+  }
+
+  // ---------------- VOZ ----------------
+  let ptVoice = null;
+  const FEMALE_HINTS = ['female','feminin','luciana','maria','joana','camila','fernanda','vitória','vitoria','raquel','helena','ines','inês','francisca','catarina','google'];
+  const MALE_HINTS = ['male','masculin','daniel','felipe','ricardo','diego','jorge','antonio','antônio','duarte'];
+
+  function pickVoice(){
+    if(!('speechSynthesis' in window)) return;
+    const voices = speechSynthesis.getVoices();
+    const ptVoices = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith('pt'));
+    if(ptVoices.length === 0){ ptVoice = null; return; }
+
+    function score(v){
+      const n = v.name.toLowerCase();
+      if(FEMALE_HINTS.some(h => n.includes(h))) return 2;
+      if(MALE_HINTS.some(h => n.includes(h))) return 0;
+      return 1;
+    }
+
+    ptVoices.sort((a,b) => score(b) - score(a));
+    ptVoice = ptVoices[0];
+  }
+  if('speechSynthesis' in window){
+    pickVoice();
+    speechSynthesis.onvoiceschanged = pickVoice;
+  }
+  function speak(text){
+    if(!('speechSynthesis' in window)) return;
+    try{
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'pt-BR';
+      if(ptVoice) u.voice = ptVoice;
+      u.rate = 0.95;
+      speechSynthesis.speak(u);
+    }catch(e){ /* silencioso */ }
+  }
+
+  // ---------------- FLUXO ----------------
+  document.getElementById('btn-hear-instructions').addEventListener('click', ()=>{
+    speak("Vamos jogar. Vou mostrar a foto de um alimento. Toque no caixote da cor certa: verde para in natura ou minimamente processado, azul para ingrediente culinário, amarelo para processado, e vermelho para ultraprocessado.");
+  });
+
+  document.getElementById('btn-start').addEventListener('click', startGame);
+
+  function startGame(){
+    order = shuffle(ITEMS);
+    idx = 0;
+    score = 0;
+    showScreen('game');
+    renderItem();
+  }
+
+  function renderItem(){
+    answered = false;
+    feedback.className = '';
+    feedback.textContent = '';
+    btnNext.style.display = 'none';
+    crates.forEach(c=>{
+      c.classList.remove('correct-flash','wrong-flash','disabled');
+    });
+
+    const total = order.length;
+    progressLabel.textContent = `Alimento ${idx+1} de ${total}`;
+    progressFill.style.width = `${(idx/total)*100}%`;
+
+    const item = order[idx];
+    itemName.textContent = item.name;
+
+    itemPhoto.src = item.photo;
+    itemPhoto.alt = item.name;
+
+    itemPhoto.classList.remove('pop');
+    void itemPhoto.offsetWidth;
+    itemPhoto.classList.add('pop');
+
+    setTimeout(()=> speak(item.name), 300);
+  }
+
+  btnHear.addEventListener('click', ()=>{
+    const item = order[idx];
+    speak(item.name);
+  });
+
+  // Modal Ingredientes Logic
+  btnOpenIngredients.addEventListener('click', openIngredientsModal);
+  modalCloseBtn.addEventListener('click', closeIngredientsModal);
+  modalConfirmBtn.addEventListener('click', closeIngredientsModal);
+  modalOverlay.addEventListener('click', (e)=>{
+    if(e.target === modalOverlay) closeIngredientsModal();
+  });
+
+  function openIngredientsModal(){
+    const item = order[idx];
+    modalItemTitle.textContent = `📋 Rótulo: ${item.name}`;
+    modalIngredientsText.textContent = item.ingredients;
+    modalPedagogicalTip.textContent = item.tip;
+
+    if(item.additives && item.additives.length > 0){
+      modalAdditivesBox.style.display = 'flex';
+      modalAdditivesList.innerHTML = item.additives.map(a => `<span class="additive-badge">⚠️ ${a}</span>`).join('');
+    } else {
+      modalAdditivesBox.style.display = 'none';
+      modalAdditivesList.innerHTML = '';
+    }
+
+    modalOverlay.classList.add('active');
+  }
+
+  function closeIngredientsModal(){
+    modalOverlay.classList.remove('active');
+  }
+
+  btnSpeakIngredients.addEventListener('click', ()=>{
+    const item = order[idx];
+    let msg = `Ingredientes do produto ${item.name}: ${item.ingredients}. ${item.tip}`;
+    if(item.additives && item.additives.length > 0){
+      msg += ` Atenção, este produto contém aditivos industriais como: ${item.additives.join(', ')}.`;
+    }
+    speak(msg);
+  });
+
+  crates.forEach(crate=>{
+    crate.addEventListener('click', ()=>{
+      if(answered) return;
+      answered = true;
+      const chosen = parseInt(crate.dataset.group, 10);
+      const item = order[idx];
+      const correct = chosen === item.group;
+
+      crates.forEach(c=> c.classList.add('disabled'));
+
+      if(correct){
+        score++;
+        crate.classList.add('correct-flash');
+        feedback.className = 'show ok';
+        feedback.textContent = `🎉 Isso mesmo! ${item.name} ${GROUPS[item.group].desc}.`;
+        speak(`Isso mesmo! ${item.name} ${GROUPS[item.group].desc}.`);
+      } else {
+        crate.classList.add('wrong-flash');
+        const rightCrate = crates.find(c=> parseInt(c.dataset.group,10) === item.group);
+        if(rightCrate) rightCrate.classList.add('correct-flash');
+        feedback.className = 'show bad';
+        feedback.textContent = `🤔 Quase! ${item.name} ${GROUPS[item.group].desc}.`;
+        speak(`Quase! ${item.name} ${GROUPS[item.group].desc}.`);
+      }
+
+      btnNext.style.display = 'flex';
+    });
+  });
+
+  btnNext.addEventListener('click', ()=>{
+    idx++;
+    if(idx >= order.length){
+      finishGame();
+    } else {
+      renderItem();
+    }
+  });
+
+  function finishGame(){
+    progressFill.style.width = '100%';
+    const total = order.length;
+    const pct = score/total;
+
+    let msg, detail;
+    if(pct >= 0.85){
+      msg = "Uau, você mandou muito bem!";
+      detail = "Você conhece muito bem os grupos de alimentos e sabe analisar os rótulos!";
+    } else if(pct >= 0.5){
+      msg = "Muito bem, continue assim!";
+      detail = "Você já está entendendo bem a classificação dos alimentos.";
+    } else {
+      msg = "Bom começo!";
+      detail = "Vamos praticar mais um pouco? Leia a lista de ingredientes em cada item para facilitar!";
+    }
+
+    document.getElementById('end-msg').textContent = msg;
+    document.getElementById('score-text').textContent = `${score} de ${total} acertos`;
+    document.getElementById('end-detail').textContent = detail;
+
+    showScreen('end');
+
+    setTimeout(()=>{
+      speak(`${msg} Você acertou ${score} de ${total}. ${detail}`);
+    }, 300);
+  }
+
+  document.getElementById('btn-hear-result').addEventListener('click', ()=>{
+    const msg = document.getElementById('end-msg').textContent;
+    const detail = document.getElementById('end-detail').textContent;
+    const scoreText = document.getElementById('score-text').textContent;
+    speak(`${msg} Você acertou ${scoreText}. ${detail}`);
+  });
+
+  document.getElementById('btn-restart').addEventListener('click', startGame);
+
+})();
+</script>
+</body>
+</html>
